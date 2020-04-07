@@ -45,6 +45,11 @@ Secp256K1::Secp256K1()
     }
 }
 
+Secp256K1::~Secp256K1()
+{
+    secp256k1_context_destroy(ctx);
+}
+
 /**
  * @brief verifies private key and generates corresponding public key
  * @param privateKey - in hexadecimal

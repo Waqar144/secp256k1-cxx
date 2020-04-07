@@ -27,6 +27,7 @@ class Secp256K1
 {
 public:
     Secp256K1();
+    ~Secp256K1();
     Secp256K1(const std::string& privateKey);
     std::vector<uint8_t> publicKey() const;
     std::vector<uint8_t> privateKey() const;
