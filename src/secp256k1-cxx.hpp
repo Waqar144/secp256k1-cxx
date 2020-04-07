@@ -28,6 +28,10 @@ class Secp256K1
 public:
     Secp256K1();
     Secp256K1(const std::string& privateKey);
+    std::vector<uint8_t> publicKey() const;
+    std::vector<uint8_t> privateKey() const;
+    std::string publicKeyHex() const;
+    std::string privateKeyHex() const;
 
 private:
     secp256k1_context* ctx = NULL;
@@ -40,6 +44,7 @@ private:
     bool createPublicKey(bool compressed = false);
     static std::string base16Decode(const std::string& str);
     static int hexValue(char hex_digit);
+    static std::string base16Encode(const std::string& input);
 };
 
 #endif

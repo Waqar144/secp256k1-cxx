@@ -73,6 +73,26 @@ Secp256K1::Secp256K1(const std::string& privateKey)
     }
 }
 
+std::vector<uint8_t> Secp256K1::publicKey() const
+{
+    return pubKey;
+}
+
+std::vector<uint8_t> Secp256K1::privateKey() const
+{
+    return privKey;
+}
+
+std::string Secp256K1::publicKeyHex() const
+{
+    return base16Encode(reinterpret_cast<const char*>(pubKey.data()));
+}
+
+std::string Secp256K1::privateKeyHex() const
+{
+    return base16Encode(reinterpret_cast<const char*>(privKey.data()));
+}
+
 bool Secp256K1::verifyKey()
 {
     return secp256k1_ec_seckey_verify(ctx, privKey.data());
@@ -152,4 +172,17 @@ int Secp256K1::hexValue(char hex_digit)
         return hex_digit - 'a' + 10;
     }
     throw std::invalid_argument("bad hex_digit");
+}
+
+std::string Secp256K1::base16Encode(const std::string& input)
+{
+    static const char hex_digits[] = "0123456789ABCDEF";
+
+    std::string output;
+    output.reserve(input.length() * 2);
+    for (unsigned char c : input) {
+        output.push_back(hex_digits[c >> 4]);
+        output.push_back(hex_digits[c & 15]);
+    }
+    return output;
 }
