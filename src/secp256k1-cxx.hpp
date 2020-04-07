@@ -33,6 +33,8 @@ public:
     std::vector<uint8_t> privateKey() const;
     std::string publicKeyHex() const;
     std::string privateKeyHex() const;
+    std::tuple<std::vector<uint8_t>, bool> Sign(const std::vector<uint8_t>& hash) const;
+    bool Verify(const std::vector<uint8_t>& hash, const std::vector<uint8_t>& sig_in) const;
 
 private:
     secp256k1_context* ctx = NULL;

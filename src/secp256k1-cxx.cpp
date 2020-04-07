@@ -5,6 +5,7 @@
 #include <chrono>
 #include <iostream>
 #include <random>
+#include <tuple>
 #include <vector>
 
 /**
@@ -122,6 +123,56 @@ bool Secp256K1::createPublicKey(bool compressed)
 
     // Succeed.
     return true;
+}
+
+std::tuple<std::vector<uint8_t>, bool> Secp256K1::Sign(
+    const std::vector<uint8_t>& hash) const
+{
+    // Make signature.
+    secp256k1_ecdsa_signature sig;
+    int ret = secp256k1_ecdsa_sign(ctx, &sig, hash.data(), privKey.data(),
+        secp256k1_nonce_function_rfc6979, nullptr);
+    if (ret != 1) {
+        // Failed to sign.
+        return std::make_tuple(std::vector<uint8_t>(), false);
+    }
+
+    // Serialize signature.
+    std::vector<uint8_t> sigOut(72);
+    size_t sigOutSize = 72;
+    ret = secp256k1_ecdsa_signature_serialize_der(
+        ctx, &sigOut[0], &sigOutSize, &sig);
+    if (ret != 1) {
+        // Failed to serialize.
+        return std::make_tuple(std::vector<uint8_t>(), false);
+    }
+
+    // Returns
+    sigOut.resize(sigOutSize);
+    return std::make_tuple(sigOut, true);
+}
+
+bool Secp256K1::Verify(const std::vector<uint8_t>& hash, const std::vector<uint8_t>& sig_in) const
+{
+    // Parse public key.
+    secp256k1_pubkey pubkey;
+    if (!secp256k1_ec_pubkey_parse(ctx, &pubkey, pubKey.data(),
+            pubKey.size())) {
+        return false;
+    }
+
+    // Parse signature.
+    secp256k1_ecdsa_signature sig;
+    if (!secp256k1_ecdsa_signature_parse_der(ctx, &sig, sig_in.data(), sig_in.size())) {
+        return false;
+    }
+    //    if (!ecdsa_signature_parse_der_lax(ctx, &sig, sig_in.data(),
+    //            sig_in.size())) {
+    //        return false;
+    //    }
+
+    secp256k1_ecdsa_signature_normalize(ctx, &sig, &sig);
+    return secp256k1_ecdsa_verify(ctx, &sig, hash.data(), &pubkey);
 }
 
 std::string Secp256K1::base16Decode(const std::string& input)
