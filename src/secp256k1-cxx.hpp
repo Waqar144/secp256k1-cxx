@@ -33,8 +33,11 @@ public:
     std::vector<uint8_t> privateKey() const;
     std::string publicKeyHex() const;
     std::string privateKeyHex() const;
-    std::tuple<std::vector<uint8_t>, bool> Sign(const std::vector<uint8_t>& hash) const;
-    bool Verify(const std::vector<uint8_t>& hash, const std::vector<uint8_t>& sig_in) const;
+    std::tuple<std::vector<uint8_t>, bool> Sign(const uint8_t* hash) const;
+    bool Verify(const uint8_t* hash, const std::vector<uint8_t>& sig_in) const;
+
+    static std::string base16Decode(const std::string& str);
+    static std::string base16Encode(const std::string& input);
 
 private:
     secp256k1_context* ctx = NULL;
@@ -45,9 +48,7 @@ private:
     /** PRIVATE METHODS **/
     bool verifyKey();
     bool createPublicKey(bool compressed = false);
-    static std::string base16Decode(const std::string& str);
     static int hexValue(char hex_digit);
-    static std::string base16Encode(const std::string& input);
 };
 
 #endif

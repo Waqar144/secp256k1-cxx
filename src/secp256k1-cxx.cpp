@@ -126,11 +126,11 @@ bool Secp256K1::createPublicKey(bool compressed)
 }
 
 std::tuple<std::vector<uint8_t>, bool> Secp256K1::Sign(
-    const std::vector<uint8_t>& hash) const
+    const uint8_t* hash) const
 {
     // Make signature.
     secp256k1_ecdsa_signature sig;
-    int ret = secp256k1_ecdsa_sign(ctx, &sig, hash.data(), privKey.data(),
+    int ret = secp256k1_ecdsa_sign(ctx, &sig, hash, privKey.data(),
         secp256k1_nonce_function_rfc6979, nullptr);
     if (ret != 1) {
         // Failed to sign.
@@ -152,7 +152,7 @@ std::tuple<std::vector<uint8_t>, bool> Secp256K1::Sign(
     return std::make_tuple(sigOut, true);
 }
 
-bool Secp256K1::Verify(const std::vector<uint8_t>& hash, const std::vector<uint8_t>& sig_in) const
+bool Secp256K1::Verify(const uint8_t* hash, const std::vector<uint8_t>& sig_in) const
 {
     // Parse public key.
     secp256k1_pubkey pubkey;
@@ -163,7 +163,7 @@ bool Secp256K1::Verify(const std::vector<uint8_t>& hash, const std::vector<uint8
 
     // Parse signature.
     secp256k1_ecdsa_signature sig;
-    if (!secp256k1_ecdsa_signature_parse_der(ctx, &sig, sig_in.data(), sig_in.size())) {
+    if (secp256k1_ecdsa_signature_parse_der(ctx, &sig, sig_in.data(), sig_in.size()) == 0) {
         return false;
     }
     //    if (!ecdsa_signature_parse_der_lax(ctx, &sig, sig_in.data(),
@@ -172,7 +172,7 @@ bool Secp256K1::Verify(const std::vector<uint8_t>& hash, const std::vector<uint8
     //    }
 
     secp256k1_ecdsa_signature_normalize(ctx, &sig, &sig);
-    return secp256k1_ecdsa_verify(ctx, &sig, hash.data(), &pubkey);
+    return secp256k1_ecdsa_verify(ctx, &sig, hash, &pubkey);
 }
 
 std::string Secp256K1::base16Decode(const std::string& input)
