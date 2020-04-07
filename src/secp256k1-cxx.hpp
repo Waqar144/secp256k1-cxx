@@ -27,6 +27,7 @@ class Secp256K1
 {
 public:
     Secp256K1();
+    Secp256K1(const std::string& privateKey);
 
 private:
     secp256k1_context* ctx = NULL;
@@ -37,6 +38,8 @@ private:
     /** PRIVATE METHODS **/
     bool verifyKey();
     bool createPublicKey(bool compressed = false);
+    static std::string base16Decode(const std::string& str);
+    static int hexValue(char hex_digit);
 };
 
 #endif
