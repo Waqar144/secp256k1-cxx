@@ -155,12 +155,19 @@ std::tuple<std::vector<uint8_t>, bool> Secp256K1::Sign(
 /**
  * @brief Secp256K1::Verify
  * @param msgHash being verified
- * @param sign input signature
- * @param pubKey pubKey being used to verify the msg
+ * @param sign input signature (72 bytes)
+ * @param pubKey pubKey being used to verify the msg (65 bytes)
  * @return true if success
  */
 bool Secp256K1::Verify(const uint8_t* msgHash, const std::vector<uint8_t> sign, const std::vector<uint8_t> pubKey)
 {
+    if (pubKey.size() != PUBLIC_KEY_SIZE) {
+        throw Secp256K1Exception("Invalid public key size");
+    }
+    if (sign.size() != 72) {
+        throw Secp256K1Exception("Invalid signature size");
+    }
+
     secp256k1_context* ctx = secp256k1_context_create(SECP256K1_CONTEXT_VERIFY);
     // Parse public key.
     secp256k1_pubkey pubkey;
