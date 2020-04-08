@@ -34,7 +34,8 @@ public:
     std::string publicKeyHex() const;
     std::string privateKeyHex() const;
     std::tuple<std::vector<uint8_t>, bool> Sign(const uint8_t* hash) const;
-    bool Verify(const uint8_t* hash, const std::vector<uint8_t>& sig_in) const;
+    //    bool Verify(const uint8_t* hash, const std::vector<uint8_t>& sig_in) const;
+    static bool Verify(const uint8_t* msgHash, const std::vector<uint8_t> sig, const std::vector<uint8_t> pubKey);
 
     static std::string base16Decode(const std::string& str);
     static std::string base16Encode(const std::string& input);

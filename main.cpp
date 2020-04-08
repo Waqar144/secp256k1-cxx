@@ -19,7 +19,8 @@ int main()
     if (suc) {
         std::cout << "\nsignature success";
 
-        bool verified = p.Verify((const uint8_t*)x.c_str(), res);
+        bool verified = Secp256K1::Verify((const uint8_t*)x.c_str(), res, p.publicKey());
+        //        bool verified = p.Verify((const uint8_t*)x.c_str(), res);
         if (verified) {
             std::cout << "\nVerified!!!\n";
         }
