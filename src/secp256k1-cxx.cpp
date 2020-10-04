@@ -56,23 +56,17 @@ Secp256K1::~Secp256K1()
  * @param privateKey - in hexadecimal
  */
 Secp256K1::Secp256K1(const std::string& privateKey)
+    : ctx(secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY))
 {
     auto priv = Secp256K1::base16Decode(privateKey);
 
-    //generate SHA-256 (our priv key)
-    std::vector<uint8_t> out;
-    out.resize(32);
-    sha256_Raw(reinterpret_cast<const uint8_t*>(priv.c_str()), priv.length(), &out[0]);
-
-    assert(out.size() == 32);
-
-    privKey = std::move(out);
+    privKey.assign(privateKey.begin(), privateKey.end());
     //verify priv key
     if (!verifyKey()) {
         throw Secp256K1Exception("Unable to create and verify key:  ");
     }
 
-    std::cout << privKey.data();
+//    std::cout << privKey.data();
 
     if (!createPublicKey()) {
         throw Secp256K1Exception("Unable to create publick key");
