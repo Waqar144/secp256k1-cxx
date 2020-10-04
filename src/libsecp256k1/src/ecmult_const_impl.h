@@ -14,7 +14,7 @@
 
 /* This is like `ECMULT_TABLE_GET_GE` but is constant time */
 #define ECMULT_CONST_TABLE_GET_GE(r,pre,n,w) do { \
-    int m; \
+    int m = 0; \
     /* Extract the sign-bit for a constant time absolute-value. */ \
     int mask = (n) >> (sizeof(n) * CHAR_BIT - 1); \
     int abs_n = ((n) + mask) ^ mask; \
@@ -25,7 +25,11 @@
     VERIFY_CHECK((n) <=  ((1 << ((w)-1)) - 1)); \
     VERIFY_SETUP(secp256k1_fe_clear(&(r)->x)); \
     VERIFY_SETUP(secp256k1_fe_clear(&(r)->y)); \
-    for (m = 0; m < ECMULT_TABLE_SIZE(w); m++) { \
+    /* Unconditionally set r->x = (pre)[m].x. r->y = (pre)[m].y. because it's either the correct one \
+     * or will get replaced in the later iterations, this is needed to make sure `r` is initialized. */ \
+    (r)->x = (pre)[m].x; \
+    (r)->y = (pre)[m].y; \
+    for (m = 1; m < ECMULT_TABLE_SIZE(w); m++) { \
         /* This loop is used to avoid secret data in array indices. See
          * the comment in ecmult_gen_impl.h for rationale. */ \
         secp256k1_fe_cmov(&(r)->x, &(pre)[m].x, m == idx_n); \
@@ -46,7 +50,7 @@
  *
  *  Adapted from `The Width-w NAF Method Provides Small Memory and Fast Elliptic Scalar
  *  Multiplications Secure against Side Channel Attacks`, Okeya and Tagaki. M. Joye (Ed.)
- *  CT-RSA 2003, LNCS 2612, pp. 328-443, 2003. Springer-Verlagy Berlin Heidelberg 2003
+ *  CT-RSA 2003, LNCS 2612, pp. 328-443, 2003. Springer-Verlag Berlin Heidelberg 2003
  *
  *  Numbers reference steps of `Algorithm SPA-resistant Width-w NAF with Odd Scalar` on pp. 335
  */
@@ -101,16 +105,22 @@ static int secp256k1_wnaf_const(int *wnaf, const secp256k1_scalar *scalar, int w
     /* 4 */
     u_last = secp256k1_scalar_shr_int(&s, w);
     do {
-        int sign;
         int even;
 
         /* 4.1 4.4 */
         u = secp256k1_scalar_shr_int(&s, w);
         /* 4.2 */
         even = ((u & 1) == 0);
-        sign = 2 * (u_last > 0) - 1;
-        u += sign * even;
-        u_last -= sign * even * (1 << w);
+        /* In contrast to the original algorithm, u_last is always > 0 and
+         * therefore we do not need to check its sign. In particular, it's easy
+         * to see that u_last is never < 0 because u is never < 0. Moreover,
+         * u_last is never = 0 because u is never even after a loop
+         * iteration. The same holds analogously for the initial value of
+         * u_last (in the first loop iteration). */
+        VERIFY_CHECK(u_last > 0);
+        VERIFY_CHECK((u_last & 1) == 1);
+        u += even;
+        u_last -= even * (1 << w);
 
         /* 4.3, adapted for global sign change */
         wnaf[word++] = u_last * global_sign;
@@ -198,7 +208,7 @@ static void secp256k1_ecmult_const(secp256k1_gej *r, const secp256k1_ge *a, cons
         int n;
         int j;
         for (j = 0; j < WINDOW_A - 1; ++j) {
-            secp256k1_gej_double_nonzero(r, r);
+            secp256k1_gej_double(r, r);
         }
 
         n = wnaf_1[i];
